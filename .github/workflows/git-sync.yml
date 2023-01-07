@@ -1,0 +1,12 @@
+on: push
+jobs:
+  git-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: git-sync
+        uses: wei/git-sync@v3
+        with:
+          source_repo: 'theonesean/postgres-poc'
+          source_branch: 'main'
+          destination_repo: ${{ secrets.GLITCH_GIT_URL }}
+          destination_branch: 'master'
