@@ -10,15 +10,15 @@
   <script>
     window.onload = () => {
       const baseOptions = {
-        wasm_path: "./lib/v86.wasm",
+        wasm_path: './lib/v86.wasm',
         memory_size: 128 * 1024 * 1024,
         filesystem: {
-          basefs: "filesystem/filesystem.json",
-          baseurl: "filesystem/",
+          basefs: 'filesystem/filesystem.json',
+          baseurl: 'filesystem/',
         },
-        screen_container: document.getElementById("screen_container"),
-        serial_container_xtermjs: document.getElementById("terminal"),
-        network_relay_url: "wss://relay.widgetry.org/",
+        screen_container: document.getElementById('screen_container'),
+        serial_container_xtermjs: document.getElementById('terminal'),
+        network_relay_url: 'wss://relay.widgetry.org/',
         autostart: true,
         disable_keyboard: true,
         disable_mouse: true,
@@ -27,14 +27,14 @@
       };
 
       const params = new URL(document.location).searchParams;
-      const boot = params.get("boot") === "true";
+      const boot = params.get('boot') === 'true';
 
       if (boot) {
-        document.getElementById("screen_container").style = "display:block";
-        document.getElementById("terminal").style = "";
+        document.getElementById('screen_container').style = 'display:block';
+        document.getElementById('terminal').style = '';
       }
 
-      const bzimageUrl = "./filesystem/27d6e559.bin";
+      const bzimageUrl = './filesystem/27d6e559.bin';
       const options = {
         ...baseOptions,
         ...(boot
@@ -43,17 +43,17 @@
                 url: bzimageUrl,
               },
               cmdline: [
-                "rw",
-                "root=host9p rootfstype=9p rootflags=version=9p2000.L,trans=virtio,cache=loose quiet acpi=off console=ttyS0 tsc=reliable mitigations=off random.trust_cpu=on nowatchdog page_poison=on",
-              ].join(" "),
+                'rw',
+                'root=host9p rootfstype=9p rootflags=version=9p2000.L,trans=virtio,cache=loose quiet acpi=off console=ttyS0 tsc=reliable mitigations=off random.trust_cpu=on nowatchdog page_poison=on',
+              ].join(' '),
               bios: {
-                url: "./bios/seabios.bin",
+                url: './bios/seabios.bin',
               },
               vga_bios: {
-                url: "./bios/vgabios.bin",
+                url: './bios/vgabios.bin',
               },
             }
-          : { initial_state: { url: "./state/v86state.bin.zst" } }),
+          : { initial_state: { url: './state/v86state.bin.zst' } }),
       };
 
       var emulator = new V86Starter(options);
@@ -62,22 +62,22 @@
         const fitAddon = new FitAddon.FitAddon();
         emulator.serial_adapter.term.loadAddon(fitAddon);
         fitAddon.fit();
-        window.addEventListener("resize", () => fitAddon.fit());
+        window.addEventListener('resize', () => fitAddon.fit());
       }
 
       function sendBackgroundCommands(commands) {
         const filename = `${(Math.random() + 1).toString(36).substring(7)}.sh`;
         emulator.create_file(
           `/inbox/${filename}`,
-          new TextEncoder("UTF-8").encode(commands.join("\n"))
+          new TextEncoder('UTF-8').encode(commands.join('\n'))
         );
       }
 
       if (!boot) {
-        emulator.add_listener("emulator-ready", function () {
+        emulator.add_listener('emulator-ready', function () {
           initTerm();
           setTimeout(() => {
-            sendBackgroundCommands(["/etc/init.d/S40network restart"]);
+            sendBackgroundCommands(['/etc/init.d/S40network restart']);
             emulator.serial0_send(
               `\\! stty rows ${emulator.serial_adapter.term.rows} cols ${emulator.serial_adapter.term.cols} && reset\n`
             );
@@ -88,36 +88,36 @@
 
       var state;
 
-      document.getElementById("save_restore").onclick = async function () {
+      document.getElementById('save_restore').onclick = async function () {
         var button = this;
 
         if (state) {
-          button.value = "Save state";
+          button.value = 'Save state';
           await emulator.restore_state(state);
           state = undefined;
         } else {
           const new_state = await emulator.save_state();
-          console.log("Saved state of " + new_state.byteLength + " bytes");
-          button.value = "Restore state";
+          console.log('Saved state of ' + new_state.byteLength + ' bytes');
+          button.value = 'Restore state';
           state = new_state;
         }
 
         button.blur();
       };
 
-      document.getElementById("save_file").onclick = async function () {
+      document.getElementById('save_file').onclick = async function () {
         const new_state = await emulator.save_state();
-        var a = document.createElement("a");
-        a.download = "v86state.bin";
+        var a = document.createElement('a');
+        a.download = 'v86state.bin';
         a.href = window.URL.createObjectURL(new Blob([new_state]));
         a.dataset.downloadurl =
-          "application/octet-stream:" + a.download + ":" + a.href;
+          'application/octet-stream:' + a.download + ':' + a.href;
         a.click();
 
         this.blur();
       };
 
-      document.getElementById("restore_file").onchange = function () {
+      document.getElementById('restore_file').onchange = function () {
         if (this.files.length) {
           var filereader = new FileReader();
           emulator.stop();
@@ -129,34 +129,49 @@
 
           filereader.readAsArrayBuffer(this.files[0]);
 
-          this.value = "";
+          this.value = '';
         }
 
         this.blur();
       };
 
-      document.getElementById("upload_files").onchange = function (e) {
+      document.getElementById('upload_files').onchange = function (e) {
         var files = e.target.files;
         for (var i = 0; i < files.length; i++) {
           var reader = new FileReader();
           reader.onload = (function (file) {
             return function (e) {
-              var data = new TextEncoder("UTF-8").encode(e.target.result);
-              emulator.create_file("/" + file.name, data);
-              console.log("uploaded " + file.name);
+              var data = new TextEncoder('UTF-8').encode(e.target.result);
+              emulator.create_file('/' + file.name, data);
+              console.log('uploaded ' + file.name);
             };
           })(files[i]);
           reader.readAsText(files[i]);
         }
       };
 
-      const uploadBtns = document.getElementsByClassName("upload-btn");
+      const uploadBtns = document.getElementsByClassName('upload-btn');
       for (let btn of uploadBtns) {
-        btn.addEventListener("click", (event) => {
-          const input = btn.getElementsByTagName("input")[0];
+        btn.addEventListener('click', (event) => {
+          const input = btn.getElementsByTagName('input')[0];
           input.click(event);
         });
       }
+
+      // track terminal history
+      hist = [];
+      hist.push([]);
+      line = 0;
+
+      emulator.add_listener('serial0-output-char', function (char) {
+        if (char === '\r') {
+          console.log(hist[line].join(''));
+          line++;
+          hist.push([]);
+          return;
+        }
+        hist[line].push(char);
+      });
     };
   </script>
 </head>
